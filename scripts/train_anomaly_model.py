@@ -8,28 +8,40 @@ import os
 # Ensure the model folder exists
 os.makedirs("model", exist_ok=True)
 
-print("Loading the IoMT dataset...")
+print("Loading dataset...")
+# Use IoMT.csv if it is structured, or use Training_parsed.csv if you parsed it.
 df = pd.read_csv("data/IoMT.csv")
+# If you parsed a text file, you might use:
+# df = pd.read_csv("data/Training_parsed.csv")
 print("Dataset loaded. Shape:", df.shape)
 
-# Data Cleaning: Fill missing values (adjust strategy as needed)
-df_filled = df.fillna(0)
+# ---- Data Cleaning ----
+# 1. Remove duplicate rows (if any)
+df = df.drop_duplicates()
+# 2. Fill missing values with a default (here, 0; adjust based on your data)
+df_clean = df.fillna(0)
+# 3. Optionally, drop columns that are irrelevant (adjust as needed)
+# df_clean = df_clean.drop(columns=["irrelevant_column_name"])
 
-# Feature Scaling: Scale numerical features
+print("Data cleaning completed. Data shape after cleaning:", df_clean.shape)
+
+# ---- Feature Scaling ----
 scaler = StandardScaler()
-X = scaler.fit_transform(df_filled)
+X = scaler.fit_transform(df_clean)
 
-# Train an Isolation Forest model for anomaly detection
-# Adjust the 'contamination' parameter based on your estimation of anomalies in the data.
+# ---- Model Training ----
+# Train an Isolation Forest for unsupervised anomaly detection.
+# Adjust 'contamination' to the expected proportion of anomalies.
 model = IsolationForest(n_estimators=100, contamination=0.01, random_state=42)
 model.fit(X)
 
-# Save the trained model and scaler for later use
+# Save the model and scaler for later use
 joblib.dump(model, "model/isolation_forest.pkl")
 joblib.dump(scaler, "model/scaler.pkl")
-print("Anomaly detection model and scaler saved in the model/ folder.")
+print("Model and scaler saved in the model/ folder.")
 
-# (Optional) Print distribution of predictions on the training data
-predictions = model.predict(X)  # Returns 1 for normal, -1 for anomaly
+# Optional: Display prediction distribution on training data
+predictions = model.predict(X)  # 1 = normal, -1 = anomaly
 unique, counts = np.unique(predictions, return_counts=True)
-print("Prediction distribution on training data:", dict(zip(unique, counts)))
+print("Prediction distribution:", dict(zip(unique, counts)))
+
