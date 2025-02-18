@@ -1,47 +1,30 @@
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
 import joblib
-import os
+import time
+import numpy as np
 
-# Ensure the model folder exists
-os.makedirs("model", exist_ok=True)
+# Load the trained model and scaler
+model = joblib.load("model/isolation_forest.pkl")
+scaler = joblib.load("model/scaler.pkl")
 
-print("Loading dataset...")
-# Use IoMT.csv if it is structured, or use Training_parsed.csv if you parsed it.
-df = pd.read_csv("data/IoMT.csv")
-# If you parsed a text file, you might use:
-# df = pd.read_csv("data/Training_parsed.csv")
-print("Dataset loaded. Shape:", df.shape)
+# Load the dataset (simulating real-time)
+file_path = "data/IoMT.csv"
+df = pd.read_csv(file_path)
 
-# ---- Data Cleaning ----
-# 1. Remove duplicate rows (if any)
-df = df.drop_duplicates()
-# 2. Fill missing values with a default (here, 0; adjust based on your data)
-df_clean = df.fillna(0)
-# 3. Optionally, drop columns that are irrelevant (adjust as needed)
-# df_clean = df_clean.drop(columns=["irrelevant_column_name"])
+print("🔴 Real-Time IoMT Threat Detection System Started...")
 
-print("Data cleaning completed. Data shape after cleaning:", df_clean.shape)
+# Simulate real-time streaming
+for index, row in df.iterrows():
+    data_point = row.values.reshape(1, -1)  # Convert row to 2D array
+    scaled_point = scaler.transform(data_point)  # Scale the data
+    
+    prediction = model.predict(scaled_point)  # Predict if it's an anomaly
+    is_anomaly = prediction[0] == -1  # Isolation Forest returns -1 for anomalies
+    
+    # Print result with alert
+    status = "⚠️ Anomaly Detected!" if is_anomaly else "✅ Normal Operation"
+    print(f"New Data Received: {row.to_dict()} - {status}")
 
-# ---- Feature Scaling ----
-scaler = StandardScaler()
-X = scaler.fit_transform(df_clean)
+    time.sleep(1)  # Simulate real-time delay
 
-# ---- Model Training ----
-# Train an Isolation Forest for unsupervised anomaly detection.
-# Adjust 'contamination' to the expected proportion of anomalies.
-model = IsolationForest(n_estimators=100, contamination=0.01, random_state=42)
-model.fit(X)
-
-# Save the model and scaler for later use
-joblib.dump(model, "model/isolation_forest.pkl")
-joblib.dump(scaler, "model/scaler.pkl")
-print("Model and scaler saved in the model/ folder.")
-
-# Optional: Display prediction distribution on training data
-predictions = model.predict(X)  # 1 = normal, -1 = anomaly
-unique, counts = np.unique(predictions, return_counts=True)
-print("Prediction distribution:", dict(zip(unique, counts)))
 
