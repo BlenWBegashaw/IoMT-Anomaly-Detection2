@@ -1,11 +1,14 @@
 import pandas as pd
 import time
+import json
 
 # Load dataset
-file_path = "data/IoMT.csv"  # Ensure dataset is in "data" folder
+file_path = "data/IoMT.csv"
 df = pd.read_csv(file_path)
 
-# Simulate live updates
+print("🔵 IoMT Data Streaming Started...")
+
 for index, row in df.iterrows():
-    print(f"New Data Received: {row.to_dict()}")  # Convert row to dictionary
-    time.sleep(1)  # Simulate real-time (adjust speed as needed)
+    data = row.to_json()  # Convert to JSON
+    print(f"Streaming Data: {data}")  # Simulate sending data
+    time.sleep(1)  # Simulate real-time streaming
