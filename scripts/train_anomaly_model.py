@@ -1,30 +1,29 @@
 import pandas as pd
-import joblib
-import time
 import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+import joblib
+import os
 
-# Load the trained model and scaler
-model = joblib.load("model/isolation_forest.pkl")
-scaler = joblib.load("model/scaler.pkl")
+# Ensure model directory exists
+os.makedirs("model", exist_ok=True)
 
-# Load the dataset (simulating real-time)
-file_path = "data/IoMT.csv"
-df = pd.read_csv(file_path)
+# Load dataset
+df = pd.read_csv("data/IoMT.csv")
 
-print("🔴 Real-Time IoMT Threat Detection System Started...")
+# Data Cleaning
+df = df.drop_duplicates().fillna(0)
 
-# Simulate real-time streaming
-for index, row in df.iterrows():
-    data_point = row.values.reshape(1, -1)  # Convert row to 2D array
-    scaled_point = scaler.transform(data_point)  # Scale the data
-    
-    prediction = model.predict(scaled_point)  # Predict if it's an anomaly
-    is_anomaly = prediction[0] == -1  # Isolation Forest returns -1 for anomalies
-    
-    # Print result with alert
-    status = "⚠️ Anomaly Detected!" if is_anomaly else "✅ Normal Operation"
-    print(f"New Data Received: {row.to_dict()} - {status}")
+# Feature Scaling
+scaler = StandardScaler()
+X = scaler.fit_transform(df)
 
-    time.sleep(1)  # Simulate real-time delay
+# Train Isolation Forest Model
+model = IsolationForest(n_estimators=100, contamination=0.01, random_state=42)
+model.fit(X)
 
+# Save the trained model and scaler
+joblib.dump(model, "model/isolation_forest.pkl")
+joblib.dump(scaler, "model/scaler.pkl")
 
+print("✅ Model and scaler saved in 'model/' folder.")
