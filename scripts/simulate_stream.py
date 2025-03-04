@@ -9,6 +9,6 @@ df = pd.read_csv(file_path)
 print("🔵 IoMT Data Streaming Started...")
 
 for index, row in df.iterrows():
-    data = row.to_json()  # Convert to JSON
+    data = json.dumps(row.to_dict())  # Convert to JSON
     print(f"Streaming Data: {data}")  # Simulate sending data
-    time.sleep(1)  # Simulate real-time streaming
+    time.sleep(1)  # Simulate real-time delay
